@@ -35,6 +35,7 @@
 #include "mbed.h"
 
 #include "GUI.h"
+#include <I2CEeprom.h>
 
 extern "C" {
 #include "board.h"
@@ -60,6 +61,32 @@ Serial pc(USBTX, USBRX, 115200);
  * Prototypes
  ******************************************************************************/
 void BOARD_EnableLcdInterrupt(void);
+
+void single_byte_WR()
+{
+#define EEPROM_ADDRESS 1
+    I2C i2c(MBED_CONF_APP_I2C_SDA,MBED_CONF_APP_I2C_SCL);
+    I2CEeprom memory(MBED_CONF_APP_I2C_SDA,MBED_CONF_APP_I2C_SCL,MBED_CONF_APP_I2C_EEPROM_ADDR,32,0);
+    for (int i = 0; i < 26; i ++)
+    {
+        GUI_Clear();
+        char test = 'A' + i;
+        char read = ' ';
+        int r = 0;
+        int w = 0;
+        w = memory.write(EEPROM_ADDRESS,test);
+        GUI_DispStringAt("Wrote: ", 60, 55);
+        GUI_DispCharAt(test, 200, 55);
+        r = memory.read(EEPROM_ADDRESS, &read, 1);
+        GUI_DispStringAt("Read: ", 60, 105);
+        GUI_DispCharAt(read, 200, 105);
+        if (w != r)
+        {
+            GUI_DispStringAt("Read != Write", 60, 155);
+        }
+        GUI_X_Delay(10000);
+    }
+}
 
 /*******************************************************************************
  * Code
@@ -97,4 +124,5 @@ int main(void)
     GUI_SetFont(&GUI_Font24_ASCII);
     GUI_SetColor(GUI_BLUE);
     GUI_DispStringAt("THERMAL IMAGER", 60, 5);
+    single_byte_WR();
 } //end main
